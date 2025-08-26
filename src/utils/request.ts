@@ -14,9 +14,9 @@ type Options = {
 export const $fetch = {
   get: (url: string, options: Options = {}) => {
     const { data } = options;
-    let params: string[] = [];
+    const params: string[] = [];
     if (data) {
-      for (let key in data) {
+      for (const key in data) {
         params.push(`${key}=${encodeURIComponent(data[key])}`);
       }
       url += `?${params.join('&')}`;

@@ -47,7 +47,7 @@ class WordService {
     const result = getWordInfo(word); // 获取处理后的单词拼音
     
     // 获取最终要押韵的无音调韵母
-    let typeWithoutTone = result.type_without_tone
+    const typeWithoutTone = result.type_without_tone
       .split('-')
       .slice(-rapNum)
       .join('-');
@@ -55,7 +55,7 @@ class WordService {
     // 获取最终要押韵的有音调韵母
     const typeWithToneArr = result.type_with_tone.split('-');
     const num = toneType > 1 ? rapNum : toneType;
-    let typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
+    const typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
     
     try {
       // 并发查询不同长度的词
@@ -128,7 +128,7 @@ class WordService {
     const result = getWordInfo(word); // 获取处理后的单词拼音
     
     // 获取最终要押韵的无音调韵母
-    let typeWithoutTone = result.type_without_tone
+    const typeWithoutTone = result.type_without_tone
       .split('-')
       .slice(-rapNum)
       .join('-');
@@ -136,7 +136,7 @@ class WordService {
     // 获取最终要押韵的有音调韵母
     const typeWithToneArr = result.type_with_tone.split('-');
     const num = toneType > 1 ? rapNum : toneType;
-    let typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
+    const typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
     
     try {
       const data = await this.getWordsFromModel({
@@ -193,4 +193,5 @@ class WordService {
   }
 }
 
-export default new WordService();
+const wordService = new WordService();
+export default wordService;

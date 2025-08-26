@@ -1,7 +1,5 @@
-export const apiPath =
-  process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000'
-    : 'https://rap.zlxiang.com';
+// 已废弃：建议使用 /api 相对路径
+export const apiPath = '/api';
 
 /**
  * 环境配置

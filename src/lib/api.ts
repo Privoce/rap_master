@@ -6,9 +6,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000/api' 
-        : '/api',
+      baseURL: '/api', // 始终使用相对路径，避免跨域问题
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

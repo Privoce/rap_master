@@ -4,12 +4,9 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   Input,
   Card,
-  message,
   Typography,
-  Button,
   Row,
   Col,
-  Space,
   List,
 } from "antd";
 import {
@@ -19,12 +16,12 @@ import {
 } from "@ant-design/icons";
 
 // import RadioGroup from "@/components/RadioGroup";
-import Loading from "@/components/Loading";
+// import Loading from "@/components/Loading";
 import Empty from "@/components/Empty";
-import RhymeTag, { RhymeTagEasy } from "@/components/RhymeTag";
+import { RhymeTagEasy } from "@/components/RhymeTag";
 
 import { apiClient } from "@/lib/api";
-import { debounce, getHotLevel } from "@/lib/utils";
+import { debounce } from "@/lib/utils";
 // import {
 //   RAP_NUM_OPTIONS,
 //   TONE_TYPE_OPTIONS,
@@ -44,7 +41,7 @@ export default function HomePage() {
   const [rhymes, setRhymes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 防抖搜索
+    // 防抖搜索
   const debouncedSearch = useCallback(
     debounce(async (params: SearchParams) => {
       if (!params.word.trim()) {
@@ -54,25 +51,26 @@ export default function HomePage() {
 
       setLoading(true);
       try {
-        const results = await apiClient.getRhymes(params);
-        setRhymes(results);
-      } catch (error: any) {
-        message.error(error.message || "搜索失败，请稍后重试");
+        const data = await apiClient.getRhymes(params);
+        setRhymes(data);
+      } catch (error) {
+        console.error('搜索失败:', error);
+        setRhymes([]);
       } finally {
         setLoading(false);
       }
-    }, 500),
-    []
+    }, 300),
+    [] // 移除依赖，避免每次 searchParams 变化都重新创建防抖函数
   );
 
-  // 处理搜索
-  const handleSearch = useCallback(() => {
-    if (!searchParams.word.trim()) {
-      message.warning("请输入要查询的韵脚");
-      return;
-    }
-    debouncedSearch(searchParams);
-  }, [searchParams, debouncedSearch]);
+  // // 处理搜索
+  // const handleSearch = useCallback(() => {
+  //   if (!searchParams.word.trim()) {
+  //     message.warning("请输入要查询的韵脚");
+  //     return;
+  //   }
+  //   debouncedSearch(searchParams);
+  // }, [searchParams, debouncedSearch]);
 
   // 处理输入变化
   const handleWordChange = useCallback(
@@ -88,21 +86,23 @@ export default function HomePage() {
   );
 
   // 处理参数变化
-  const handleParamChange = useCallback(
-    (key: keyof SearchParams, value: number) => {
-      const newParams = { ...searchParams, [key]: value };
-      setSearchParams(newParams);
+  // const handleParamChange = useCallback(
+  //   (key: keyof SearchParams, value: number) => {
+  //     const newParams = { ...searchParams, [key]: value };
+  //     setSearchParams(newParams);
 
-      if (searchParams.word.trim()) {
-        debouncedSearch(newParams);
-      }
-    },
-    [searchParams, debouncedSearch]
-  );
+  //     if (searchParams.word.trim()) {
+  //       debouncedSearch(newParams);
+  //     }
+  //   },
+  //   [searchParams, debouncedSearch]
+  // );
 
   useEffect(() => {
-    debouncedSearch(searchParams);
-  }, []);
+    if (searchParams.word) {
+      debouncedSearch(searchParams);
+    }
+  }, [searchParams, debouncedSearch]);
 
   return (
     <div className="min-h-screen bg-white">
