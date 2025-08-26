@@ -19,7 +19,7 @@ async function initializeDatabase() {
 }
 
 /**
- * GET /api/words - 获取押韵词汇摘要
+ * GET /api/words - 获取押韵词汇摘要（总是返回所有长度的词汇）
  */
 export async function GET(request: NextRequest) {
   try {
@@ -29,20 +29,8 @@ export async function GET(request: NextRequest) {
     const word = searchParams.get('word') || '';
     const rap_num = searchParams.get('rap_num') || '1';
     const tone_type = searchParams.get('tone_type') || '0';
-    const length = searchParams.get('length');
 
-    // 如果有length参数，返回指定长度的词汇
-    if (length) {
-      const result = await wordService.getWords({
-        word,
-        rap_num,
-        tone_type,
-        length,
-      });
-      return NextResponse.json(result);
-    }
-
-    // 否则返回摘要（所有长度）
+    // 总是返回摘要（所有长度的词汇）
     const result = await wordService.getSummary({
       word,
       rap_num,

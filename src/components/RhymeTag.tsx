@@ -16,28 +16,28 @@ const getRateConfig = (level: string) => {
     case 'rate-hot':
       return {
         color: 'red',
-        icon: '🔥',
+        icon: '',
         gradient: 'from-red-400 to-red-600',
         text: 'text-white'
       }
     case 'rate-popular':
       return {
         color: 'orange', 
-        icon: '🌟',
+        icon: '',
         gradient: 'from-orange-400 to-orange-600',
         text: 'text-white'
       }
     case 'rate-common':
       return {
         color: 'blue',
-        icon: '👍', 
+        icon: '', 
         gradient: 'from-blue-400 to-blue-600',
         text: 'text-white'
       }
     case 'rate-rare':
       return {
         color: 'purple',
-        icon: '💎',
+        icon: '',
         gradient: 'from-purple-400 to-purple-600', 
         text: 'text-white'
       }

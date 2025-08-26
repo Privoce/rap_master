@@ -45,7 +45,6 @@ export const SearchParamsSchema = z.object({
   word: z.string().min(1, '请输入要查询的韵脚'),
   rap_num: z.number().int().min(1).max(4).default(1),
   tone_type: z.number().int().min(0).max(2).default(0),
-  length: z.number().int().min(2).max(5).default(2),
 })
 
 export type SearchParams = z.infer<typeof SearchParamsSchema>

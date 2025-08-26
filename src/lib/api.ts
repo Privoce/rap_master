@@ -52,16 +52,27 @@ class ApiClient {
   }
 
   /**
-   * 获取押韵词汇
+   * 获取押韵词汇 - 自动获取所有长度并按优先级排序
    */
   async getRhymes(params: SearchParams): Promise<Rhythm[]> {
     try {
-      const response = await this.client.get<ApiResponse<Rhythm[]>>('/words', {
+      const response = await this.client.get<ApiResponse<Rhythm[][]>>('/words', {
         params,
       })
       
-      if (response.data.code === 0) {
-        return response.data.data || []
+      if (response.data.code === 0 && response.data.data) {
+        // data 是一个二维数组：[2字词汇, 3字词汇, 4字词汇, 5字+词汇]
+        const [words2, words3, words4, words5] = response.data.data
+        
+        // 按优先级重新排序：4字 → 3字 → 2字 → 5字+
+        const sortedResults = [
+          ...(words4 || []),
+          ...(words3 || []),
+          ...(words2 || []),
+          ...(words5 || []),
+        ]
+        
+        return sortedResults
       } else {
         throw new Error(response.data.err_tips || '获取数据失败')
       }

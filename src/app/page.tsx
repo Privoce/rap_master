@@ -14,7 +14,6 @@ import { debounce, getHotLevel } from '@/lib/utils'
 import { 
   RAP_NUM_OPTIONS, 
   TONE_TYPE_OPTIONS, 
-  WORD_LENGTH_OPTIONS,
   APP_CONFIG 
 } from '@/lib/constants'
 import type { SearchParams } from '@/types'
@@ -26,7 +25,6 @@ export default function HomePage() {
     word: '',
     rap_num: 1,
     tone_type: 0,
-    length: 2,
   })
   
   const [rhymes, setRhymes] = useState<any[]>([])
@@ -144,8 +142,8 @@ export default function HomePage() {
             </Title>
           </div>
           
-          <Row gutter={[24, 24]}>
-            <Col xs={24} md={8}>
+          <Row gutter={[48, 24]} justify="center">
+            <Col xs={24} md={12}>
               <div className="text-center">
                 <Title level={5} className="!mb-4 !text-gray-600">
                   <StarOutlined className="mr-2 text-blue-500" />
@@ -160,7 +158,7 @@ export default function HomePage() {
               </div>
             </Col>
             
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <div className="text-center">
                 <Title level={5} className="!mb-4 !text-gray-600">
                   🎵 音调类型
@@ -169,20 +167,6 @@ export default function HomePage() {
                   options={TONE_TYPE_OPTIONS}
                   value={searchParams.tone_type}
                   onChange={(value) => handleParamChange('tone_type', value)}
-                  buttonStyle="solid"
-                />
-              </div>
-            </Col>
-            
-            <Col xs={24} md={8}>
-              <div className="text-center">
-                <Title level={5} className="!mb-4 !text-gray-600">
-                  📝 词语长度
-                </Title>
-                <RadioGroup
-                  options={WORD_LENGTH_OPTIONS}
-                  value={searchParams.length}
-                  onChange={(value) => handleParamChange('length', value)}
                   buttonStyle="solid"
                 />
               </div>
@@ -211,28 +195,28 @@ export default function HomePage() {
               )}
               
               {!loading && rhymes.length > 0 && (
-                <div className="space-y-4">
-                  {/* 热度分类展示 */}
-                  {['rate-hot', 'rate-popular', 'rate-common', 'rate-rare'].map(level => {
-                    const levelRhymes = rhymes.filter(r => getHotLevel(r.length, r.rate) === level)
-                    if (levelRhymes.length === 0) return null
+                <div className="space-y-6">
+                  {/* 按长度分组展示 */}
+                  {[4, 3, 2, 5].map(length => {
+                    const lengthRhymes = rhymes.filter(r => r.length === length)
+                    if (lengthRhymes.length === 0) return null
                     
-                    const levelInfo = {
-                      'rate-hot': { title: '🔥 超热门词汇', color: 'red', bg: 'bg-red-50' },
-                      'rate-popular': { title: '🌟 流行词汇', color: 'orange', bg: 'bg-orange-50' },
-                      'rate-common': { title: '👍 常用词汇', color: 'blue', bg: 'bg-blue-50' },
-                      'rate-rare': { title: '💎 精选词汇', color: 'purple', bg: 'bg-purple-50' }
-                    }[level]!
+                    const lengthInfo = {
+                      4: { title: '四字词汇', color: 'red', bg: 'bg-red-50', icon: '🔥' },
+                      3: { title: '三字词汇', color: 'orange', bg: 'bg-orange-50', icon: '⭐' },
+                      2: { title: '二字词汇', color: 'blue', bg: 'bg-blue-50', icon: '💎' },
+                      5: { title: '长词汇', color: 'purple', bg: 'bg-purple-50', icon: '🎯' }
+                    }[length]!
                     
                     return (
-                      <div key={level} className={`p-4 rounded-xl ${levelInfo.bg}`}>
+                      <div key={length} className={`p-4 rounded-xl ${lengthInfo.bg}`}>
                         <Title level={5} className="!mb-3 !text-gray-700">
-                          {levelInfo.title} ({levelRhymes.length}个)
+                          {lengthInfo.icon} {lengthInfo.title} ({lengthRhymes.length}个)
                         </Title>
                         <div className="flex flex-wrap gap-2">
-                          {levelRhymes.map((rhythm: any) => (
+                          {lengthRhymes.map((rhythm: any) => (
                             <RhymeTag
-                              key={rhythm.id}
+                              key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
                               word={rhythm.word}
                               rate={rhythm.rate}
                               length={rhythm.length}
