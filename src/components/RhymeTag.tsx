@@ -1,65 +1,66 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { getHotLevel } from '@/lib/utils'
+import React from "react";
+import { getHotLevel } from "@/lib/utils";
+import { Button } from "antd";
 
 interface RhymeTagProps {
-  word: string
-  rate: number
-  length: number
-  className?: string
-  onClick?: () => void
+  word: string;
+  rate: number;
+  length: number;
+  className?: string;
+  onClick?: () => void;
 }
 
 const getRateConfig = (level: string) => {
   switch (level) {
-    case 'rate-hot':
+    case "rate-hot":
       return {
-        color: 'red',
-        icon: '',
-        gradient: 'from-red-400 to-red-600',
-        text: 'text-white'
-      }
-    case 'rate-popular':
+        color: "red",
+        icon: "",
+        gradient: "from-red-400 to-red-600",
+        text: "text-white",
+      };
+    case "rate-popular":
       return {
-        color: 'orange', 
-        icon: '',
-        gradient: 'from-orange-400 to-orange-600',
-        text: 'text-white'
-      }
-    case 'rate-common':
+        color: "orange",
+        icon: "",
+        gradient: "from-orange-400 to-orange-600",
+        text: "text-white",
+      };
+    case "rate-common":
       return {
-        color: 'blue',
-        icon: '', 
-        gradient: 'from-blue-400 to-blue-600',
-        text: 'text-white'
-      }
-    case 'rate-rare':
+        color: "blue",
+        icon: "",
+        gradient: "from-blue-400 to-blue-600",
+        text: "text-white",
+      };
+    case "rate-rare":
       return {
-        color: 'purple',
-        icon: '',
-        gradient: 'from-purple-400 to-purple-600', 
-        text: 'text-white'
-      }
+        color: "purple",
+        icon: "",
+        gradient: "from-purple-400 to-purple-600",
+        text: "text-white",
+      };
     default:
       return {
-        color: 'default',
-        icon: '',
-        gradient: 'from-gray-400 to-gray-600',
-        text: 'text-white'
-      }
+        color: "default",
+        icon: "",
+        gradient: "from-gray-400 to-gray-600",
+        text: "text-white",
+      };
   }
-}
+};
 
 export default function RhymeTag({
   word,
   rate,
   length,
-  className = '',
-  onClick
+  className = "",
+  onClick,
 }: RhymeTagProps) {
-  const hotLevel = getHotLevel(length, rate)
-  const config = getRateConfig(hotLevel)
+  const hotLevel = getHotLevel(length, rate);
+  const config = getRateConfig(hotLevel);
 
   return (
     <div
@@ -77,5 +78,20 @@ export default function RhymeTag({
       <span className="mr-1 text-base">{config.icon}</span>
       <span className="font-semibold">{word}</span>
     </div>
-  )
+  );
+}
+
+export function RhymeTagEasy({
+  word,
+  rate,
+  length,
+  className = "",
+  onClick,
+}: RhymeTagProps) {
+  return (
+    <Button onClick={onClick}>
+      <span className="font-semibold">{word}</span>
+      {/* <span>{rate}</span> */}
+    </Button>
+  );
 }

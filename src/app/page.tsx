@@ -1,93 +1,117 @@
-'use client'
+"use client";
 
-import React, { useState, useCallback } from 'react'
-import { Input, Card, message, Typography, Button, Row, Col } from 'antd'
-import { SearchOutlined, ThunderboltOutlined, StarOutlined, HeartOutlined } from '@ant-design/icons'
+import React, { useState, useCallback, useEffect } from "react";
+import {
+  Input,
+  Card,
+  message,
+  Typography,
+  Button,
+  Row,
+  Col,
+  Space,
+  List,
+} from "antd";
+import {
+  SearchOutlined,
+  ThunderboltOutlined,
+  HeartOutlined,
+} from "@ant-design/icons";
 
-import RadioGroup from '@/components/RadioGroup'
-import Loading from '@/components/Loading'
-import Empty from '@/components/Empty'
-import RhymeTag from '@/components/RhymeTag'
+// import RadioGroup from "@/components/RadioGroup";
+import Loading from "@/components/Loading";
+import Empty from "@/components/Empty";
+import RhymeTag, { RhymeTagEasy } from "@/components/RhymeTag";
 
-import { apiClient } from '@/lib/api'
-import { debounce, getHotLevel } from '@/lib/utils'
-import { 
-  RAP_NUM_OPTIONS, 
-  TONE_TYPE_OPTIONS, 
-  APP_CONFIG 
-} from '@/lib/constants'
-import type { SearchParams } from '@/types'
+import { apiClient } from "@/lib/api";
+import { debounce, getHotLevel } from "@/lib/utils";
+// import {
+//   RAP_NUM_OPTIONS,
+//   TONE_TYPE_OPTIONS,
+//   APP_CONFIG,
+// } from "@/lib/constants";
+import type { SearchParams } from "@/types";
 
-const { Title, Paragraph } = Typography
+const { Title, Paragraph } = Typography;
 
 export default function HomePage() {
   const [searchParams, setSearchParams] = useState<SearchParams>({
-    word: '',
-    rap_num: 1,
-    tone_type: 0,
-  })
-  
-  const [rhymes, setRhymes] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
+    word: "失败",
+    rap_num: 2,
+    tone_type: 2,
+  });
+
+  const [rhymes, setRhymes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // 防抖搜索
   const debouncedSearch = useCallback(
     debounce(async (params: SearchParams) => {
       if (!params.word.trim()) {
-        setRhymes([])
-        return
+        setRhymes([]);
+        return;
       }
-      
-      setLoading(true)
+
+      setLoading(true);
       try {
-        const results = await apiClient.getRhymes(params)
-        setRhymes(results)
+        const results = await apiClient.getRhymes(params);
+        setRhymes(results);
       } catch (error: any) {
-        message.error(error.message || '搜索失败，请稍后重试')
+        message.error(error.message || "搜索失败，请稍后重试");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }, 500),
     []
-  )
+  );
 
   // 处理搜索
   const handleSearch = useCallback(() => {
     if (!searchParams.word.trim()) {
-      message.warning('请输入要查询的韵脚')
-      return
+      message.warning("请输入要查询的韵脚");
+      return;
     }
-    debouncedSearch(searchParams)
-  }, [searchParams, debouncedSearch])
+    debouncedSearch(searchParams);
+  }, [searchParams, debouncedSearch]);
 
   // 处理输入变化
-  const handleWordChange = useCallback((value: string) => {
-    const newParams = { ...searchParams, word: value }
-    setSearchParams(newParams)
-    
-    // if (value.trim()) {
-    //   debouncedSearch(newParams)
-    // }
-  }, [searchParams, debouncedSearch])
+  const handleWordChange = useCallback(
+    (value: string) => {
+      const newParams = { ...searchParams, word: value };
+      setSearchParams(newParams);
+
+      if (value.trim()) {
+        debouncedSearch(newParams);
+      }
+    },
+    [searchParams, debouncedSearch]
+  );
 
   // 处理参数变化
-  const handleParamChange = useCallback((key: keyof SearchParams, value: number) => {
-    const newParams = { ...searchParams, [key]: value }
-    setSearchParams(newParams)
-    
-    if (searchParams.word.trim()) {
-      debouncedSearch(newParams)
-    }
-  }, [searchParams, debouncedSearch])
+  const handleParamChange = useCallback(
+    (key: keyof SearchParams, value: number) => {
+      const newParams = { ...searchParams, [key]: value };
+      setSearchParams(newParams);
+
+      if (searchParams.word.trim()) {
+        debouncedSearch(newParams);
+      }
+    },
+    [searchParams, debouncedSearch]
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchParams);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden">
+        <div className="absolute"></div>
+        <div className="relative max-w-7xl mx-auto px-1 py-2 sm:px-6 lg:px-8">
           <div className="text-center">
-            <Title 
+            {/* <Title 
               level={1} 
               className="!text-white !text-5xl !font-bold !mb-4 animate-fade-in"
               style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
@@ -96,52 +120,38 @@ export default function HomePage() {
             </Title>
             <Paragraph className="!text-blue-100 !text-xl !mb-8 !max-w-2xl mx-auto">
               {APP_CONFIG.description}
-            </Paragraph>
-            
+            </Paragraph> */}
+
             {/* 搜索框 */}
             <div className="max-w-2xl mx-auto">
-              <Input.Search
-                size="large"
+              <Input
                 placeholder="请输入要押韵的韵脚，如：唱、爱、梦想..."
-                enterButton={
-                  <Button 
-                    type="primary" 
-                    icon={<SearchOutlined />}
-                    className="!bg-orange-500 !border-orange-500 hover:!bg-orange-400"
-                  >
-                    搜索押韵
-                  </Button>
-                }
+                size="large"
+                prefix={<SearchOutlined />}
                 value={searchParams.word}
                 onChange={(e) => handleWordChange(e.target.value)}
-                onSearch={handleSearch}
-                className="!shadow-2xl"
-                style={{ 
-                  fontSize: '18px',
-                  borderRadius: '50px',
-                }}
-              />
+              ></Input>
             </div>
           </div>
         </div>
-        
+
         {/* 装饰性背景 */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-bounce"></div>
+        {/* <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-bounce"></div>
         <div className="absolute top-32 right-20 w-16 h-16 bg-pink-300 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-green-300 rounded-full opacity-20 animate-ping"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-green-300 rounded-full opacity-20 animate-ping"></div> */}
       </div>
 
       {/* 主要内容区 */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className=" mx-auto px-4 py-4" style={{ maxWidth: "444px" }}>
         {/* 控制面板 */}
-        <Card className="!mb-8 !shadow-xl !border-0 !rounded-2xl overflow-hidden">
+        {/* <Card className="!mb-8 !shadow-xl !border-0 !rounded-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 -m-6 mb-6">
             <Title level={3} className="!mb-0 !text-gray-700 text-center">
               <ThunderboltOutlined className="mr-2 text-yellow-500" />
               自定义押韵参数
             </Title>
           </div>
-          
+
           <Row gutter={[48, 24]} justify="center">
             <Col xs={24} md={12}>
               <div className="text-center">
@@ -152,12 +162,12 @@ export default function HomePage() {
                 <RadioGroup
                   options={RAP_NUM_OPTIONS}
                   value={searchParams.rap_num}
-                  onChange={(value) => handleParamChange('rap_num', value)}
+                  onChange={(value) => handleParamChange("rap_num", value)}
                   buttonStyle="solid"
                 />
               </div>
             </Col>
-            
+
             <Col xs={24} md={12}>
               <div className="text-center">
                 <Title level={5} className="!mb-4 !text-gray-600">
@@ -166,18 +176,18 @@ export default function HomePage() {
                 <RadioGroup
                   options={TONE_TYPE_OPTIONS}
                   value={searchParams.tone_type}
-                  onChange={(value) => handleParamChange('tone_type', value)}
+                  onChange={(value) => handleParamChange("tone_type", value)}
                   buttonStyle="solid"
                 />
               </div>
             </Col>
           </Row>
-        </Card>
+        </Card> */}
 
         {/* 搜索结果区域 */}
         {searchParams.word && (
-          <Card className="!shadow-xl !border-0 !rounded-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 -m-6 mb-6">
+          <div>
+            {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 -m-6 mb-6">
               <Title level={3} className="!mb-2 !text-gray-700">
                 <HeartOutlined className="mr-2 text-red-500" />
                 "{searchParams.word}" 的押韵结果
@@ -187,51 +197,147 @@ export default function HomePage() {
                   找到 <span className="font-bold text-blue-600">{rhymes.length}</span> 个押韵词汇
                 </Paragraph>
               )}
-            </div>
-            
-            <div className="min-h-[300px]">
-              {!loading && rhymes.length === 0 && (
-                <Empty />
-              )}
-              
+            </div> */}
+
+            <div style={{ height: "100%", width: "100%" }}>
+              {!loading && rhymes.length === 0 && <Empty />}
+
+              <List
+                grid={{ gutter: 16, column: 5 }}
+                dataSource={[
+                  {
+                    id: 1,
+                    word: "你",
+                    rate: 5,
+                    length: 2,
+                  },
+                  {
+                    id: 2,
+                    word: "我",
+                    rate: 4,
+                    length: 2,
+                  },
+                  {
+                    id: 3,
+                    word: "说",
+                    rate: 3,
+                    length: 2,
+                  },
+                  {
+                    id: 4,
+                    word: "自己",
+                    rate: 2,
+                    length: 2,
+                  },
+                  {
+                    id: 5,
+                    word: "今天",
+                    rate: 1,
+                    length: 2,
+                  },
+                ]}
+                renderItem={(rhythm) => (
+                  <List.Item>
+                    <RhymeTagEasy
+                      key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+                      word={rhythm.word}
+                      rate={rhythm.rate}
+                      length={rhythm.length}
+                      onClick={() => handleWordChange(rhythm.word)}
+                      className="transform hover:scale-110 transition-all duration-300"
+                    ></RhymeTagEasy>
+                  </List.Item>
+                )}
+              />
               {!loading && rhymes.length > 0 && (
-                <div className="space-y-6">
+                <div className="space-y-2">
                   {/* 按长度分组展示 */}
-                  {[4, 3, 2, 5].map(length => {
-                    const lengthRhymes = rhymes.filter(r => r.length === length)
-                    if (lengthRhymes.length === 0) return null
-                    
+                  {[4, 3, 2, 5].map((length) => {
+                    const lengthRhymes = rhymes.filter(
+                      (r) => r.length === length
+                    );
+                    if (lengthRhymes.length === 0) return null;
+
                     const lengthInfo = {
-                      4: { title: '四字词汇', color: 'red', bg: 'bg-red-50', icon: '🔥' },
-                      3: { title: '三字词汇', color: 'orange', bg: 'bg-orange-50', icon: '⭐' },
-                      2: { title: '二字词汇', color: 'blue', bg: 'bg-blue-50', icon: '💎' },
-                      5: { title: '长词汇', color: 'purple', bg: 'bg-purple-50', icon: '🎯' }
-                    }[length]!
-                    
+                      4: {
+                        title: "四字词汇",
+                        color: "red",
+                        // bg: "bg-red-50",
+                        icon: "🔥",
+                      },
+                      3: {
+                        title: "三字词汇",
+                        color: "orange",
+                        // bg: "bg-orange-50",
+                        icon: "⭐",
+                      },
+                      2: {
+                        title: "二字词汇",
+                        color: "blue",
+                        // bg: "bg-blue-50",
+                        icon: "💎",
+                      },
+                      5: {
+                        title: "长词汇",
+                        color: "purple",
+                        // bg: "bg-purple-50",
+                        icon: "🎯",
+                      },
+                    }[length]!;
                     return (
-                      <div key={length} className={`p-4 rounded-xl ${lengthInfo.bg}`}>
-                        <Title level={5} className="!mb-3 !text-gray-700">
+                      <div key={length} className={`p-1 rounded-xl`}>
+                        {/* <Title level={5} className="!mb-3 !text-gray-700">
                           {lengthInfo.icon} {lengthInfo.title} ({lengthRhymes.length}个)
-                        </Title>
+                        </Title> */}
                         <div className="flex flex-wrap gap-2">
+                          <List
+                            grid={{ gutter: 16, column: length === 2 ? 5 : 4 }}
+                            dataSource={lengthRhymes}
+                            renderItem={(rhythm) => (
+                              <List.Item>
+                                <RhymeTagEasy
+                                  key={
+                                    rhythm.id || `${rhythm.word}-${rhythm.rate}`
+                                  }
+                                  word={rhythm.word}
+                                  rate={rhythm.rate}
+                                  length={rhythm.length}
+                                  onClick={() => handleWordChange(rhythm.word)}
+                                  className="transform hover:scale-110 transition-all duration-300"
+                                ></RhymeTagEasy>
+                              </List.Item>
+                            )}
+                          />
+                          {/* 
                           {lengthRhymes.map((rhythm: any) => (
-                            <RhymeTag
-                              key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
-                              word={rhythm.word}
-                              rate={rhythm.rate}
-                              length={rhythm.length}
-                              onClick={() => handleWordChange(rhythm.word)}
-                              className="transform hover:scale-110 transition-all duration-300"
-                            />
-                          ))}
+                            // <RhymeTag
+                            //   key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+                            //   word={rhythm.word}
+                            //   rate={rhythm.rate}
+                            //   length={rhythm.length}
+                              </List.Item>
+                            )}
+                          />
+
+                          {lengthRhymes.map((rhythm: any) => (
+                            // <RhymeTag
+                            //   key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+                            //   word={rhythm.word}
+                            //   rate={rhythm.rate}
+                            //   length={rhythm.length}
+                            //   onClick={() => handleWordChange(rhythm.word)}
+                            //   className="transform hover:scale-110 transition-all duration-300"
+                            // />
+                           
+                          ))} */}
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               )}
             </div>
-          </Card>
+          </div>
         )}
 
         {/* 说明区域 */}
@@ -247,7 +353,9 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <SearchOutlined className="text-2xl text-blue-600" />
                     </div>
-                    <Title level={5} className="!mb-2">输入韵脚</Title>
+                    <Title level={5} className="!mb-2">
+                      输入韵脚
+                    </Title>
                     <Paragraph className="!text-gray-500">
                       在搜索框中输入你想要押韵的词汇
                     </Paragraph>
@@ -258,7 +366,9 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ThunderboltOutlined className="text-2xl text-green-600" />
                     </div>
-                    <Title level={5} className="!mb-2">调整参数</Title>
+                    <Title level={5} className="!mb-2">
+                      调整参数
+                    </Title>
                     <Paragraph className="!text-gray-500">
                       选择押韵类型、音调和词长
                     </Paragraph>
@@ -269,7 +379,9 @@ export default function HomePage() {
                     <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <HeartOutlined className="text-2xl text-purple-600" />
                     </div>
-                    <Title level={5} className="!mb-2">获得灵感</Title>
+                    <Title level={5} className="!mb-2">
+                      获得灵感
+                    </Title>
                     <Paragraph className="!text-gray-500">
                       点击结果词汇继续联想创作
                     </Paragraph>
@@ -282,7 +394,7 @@ export default function HomePage() {
       </div>
 
       {/* Loading Overlay */}
-      <Loading show={loading} tip="正在搜索押韵词汇..." />
+      {/* <Loading show={loading} tip="正在搜索押韵词汇..." /> */}
     </div>
-  )
+  );
 }
