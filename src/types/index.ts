@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // 押韵词条类型
 export const RhythmSchema = z.object({
-  id: z.number(),
+  id: z.number().optional(),
   word: z.string(),
   rate: z.number(),
   length: z.number(),
@@ -15,16 +15,28 @@ export const RhythmSchema = z.object({
 
 export type Rhythm = z.infer<typeof RhythmSchema>
 
+// 词语信息类型（用于内部处理）
+export interface WordInfo {
+  word: string;
+  rate: number;
+  length: number;
+  initial: string;
+  final_with_tone: string;
+  final_without_tone: string;
+  type_with_tone: string;
+  type_without_tone: string;
+}
+
 // API 响应类型
 export const ApiResponseSchema = z.object({
   code: z.number(),
-  message: z.string().optional(),
+  err_tips: z.string().optional(),
   data: z.array(RhythmSchema).optional(),
 })
 
 export type ApiResponse<T = Rhythm[]> = {
   code: number
-  message?: string
+  err_tips?: string
   data?: T
 }
 

@@ -63,7 +63,7 @@ class ApiClient {
       if (response.data.code === 0) {
         return response.data.data || []
       } else {
-        throw new Error(response.data.message || '获取数据失败')
+        throw new Error(response.data.err_tips || '获取数据失败')
       }
     } catch (error) {
       console.error('获取押韵数据失败:', error)

@@ -1,0 +1,46 @@
+// 声母列表
+export const initialList = [
+  ['ch', 'sh', 'zh', 'z', 'c', 's'],
+  [
+    'b',
+    'p',
+    'm',
+    'f',
+    'd',
+    't',
+    'n',
+    'l',
+    'g',
+    'k',
+    'h',
+    'j',
+    'q',
+    'x',
+    'r',
+    'y',
+    'w',
+    '',
+  ],
+];
+
+// 韵母列表
+export const finalList = [
+  ['a', 'ia', 'ua'],
+  ['o', 'uo'],
+  ['e'],
+  ['ie', 'ue', 've'],
+  ['i'],
+  ['er'],
+  ['i'],
+  ['ei', 'ui'],
+  ['ai', 'uai'],
+  ['u'],
+  ['v', 'ü'],
+  ['ou', 'iu'],
+  ['ao', 'iao'],
+  ['an', 'ian', 'uan'],
+  ['en', 'in', 'un'],
+  ['ang', 'uang', 'iang'],
+  ['eng', 'ing'],
+  ['ong', 'iong'],
+];

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "db:init": "tsx scripts/init-database.ts",
+    "db:import": "tsx scripts/import-words.ts"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
