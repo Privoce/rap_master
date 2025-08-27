@@ -34,29 +34,24 @@ class WordService {
     if (paramsInvalid([word, rap_num, tone_type])) {
       return paramErr() as ApiResponse<Rhythm[][]>;
     }
-    
     // 为空直接返回
     if (word === '') {
       return success([]);
     }
     
     await this.ensureConnection();
-    
     const rapNum = safeParseInt(rap_num);
     const toneType = safeParseInt(tone_type);
     const result = getWordInfo(word); // 获取处理后的单词拼音
-    
     // 获取最终要押韵的无音调韵母
     const typeWithoutTone = result.type_without_tone
       .split('-')
       .slice(-rapNum)
       .join('-');
-    
     // 获取最终要押韵的有音调韵母
     const typeWithToneArr = result.type_with_tone.split('-');
     const num = toneType > 1 ? rapNum : toneType;
     const typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
-    
     try {
       // 并发查询不同长度的词
       const [words2, words3, words4, words5] = await Promise.all([
@@ -132,7 +127,6 @@ class WordService {
       .split('-')
       .slice(-rapNum)
       .join('-');
-    
     // 获取最终要押韵的有音调韵母
     const typeWithToneArr = result.type_with_tone.split('-');
     const num = toneType > 1 ? rapNum : toneType;

@@ -12,6 +12,7 @@ export function getWordInfo(word = '', rate = 0): WordInfo {
   const length = word.length;
   const initialArr = pinyin(word, { type: 'array', pattern: 'initial' }); // 声母
   const finalWithToneArr = pinyin(word, { type: 'array', pattern: 'final' }); // 带拼音韵母
+
   const finalWithoutToneArr = pinyin(word, {
     type: 'array',
     toneType: 'none',
@@ -22,7 +23,12 @@ export function getWordInfo(word = '', rate = 0): WordInfo {
     toneType: 'num',
     pattern: 'num',
   }); // 音调列表
-  
+  // 遍历toneArr如果有值为'0'则改为'1'
+  toneArr.forEach((item, index) => {
+    if (item === '0') {
+      toneArr[index] = '1';
+    }
+  });
   const typeWithToneArr: string[] = [];
   const typeWithoutToneArr: string[] = [];
   

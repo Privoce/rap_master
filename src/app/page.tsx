@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import {
-  Input,
-  Card,
-  Typography,
-  Row,
-  Col,
-  List,
-} from "antd";
+import { Input, Card, Typography, Row, Col, List } from "antd";
 import {
   SearchOutlined,
   ThunderboltOutlined,
@@ -41,20 +34,20 @@ export default function HomePage() {
   const [rhymes, setRhymes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-    // 防抖搜索
+  // 防抖搜索
   const debouncedSearch = useCallback(
     debounce(async (params: SearchParams) => {
       if (!params.word.trim()) {
         setRhymes([]);
         return;
       }
-
+      
       setLoading(true);
       try {
         const data = await apiClient.getRhymes(params);
         setRhymes(data);
       } catch (error) {
-        console.error('搜索失败:', error);
+        console.error("搜索失败:", error);
         setRhymes([]);
       } finally {
         setLoading(false);
@@ -203,36 +196,114 @@ export default function HomePage() {
               {!loading && rhymes.length === 0 && <Empty />}
 
               <List
-                grid={{ gutter: 16, column: 5 }}
+                grid={{ gutter: 16, column: 6 }}
                 dataSource={[
                   {
                     id: 1,
-                    word: "你",
+                    word: "差",
                     rate: 5,
                     length: 2,
                   },
                   {
                     id: 2,
-                    word: "我",
+                    word: "你",
                     rate: 4,
                     length: 2,
                   },
                   {
                     id: 3,
-                    word: "说",
+                    word: "不",
                     rate: 3,
                     length: 2,
                   },
                   {
                     id: 4,
-                    word: "自己",
+                    word: "快",
                     rate: 2,
                     length: 2,
                   },
                   {
                     id: 5,
-                    word: "今天",
+                    word: "谁",
                     rate: 1,
+                    length: 2,
+                  },
+                  {
+                    id: 6,
+                    word: "错",
+                    rate: 4,
+                    length: 2,
+                  },
+                  {
+                    id: 7,
+                    word: "闹",
+                    rate: 3,
+                    length: 2,
+                  },
+                  {
+                    id: 8,
+                    word: "乱",
+                    rate: 2,
+                    length: 2,
+                  },
+                  {
+                    id: 9,
+                    word: "句",
+                    rate: 1,
+                    length: 2,
+                  },
+                  {
+                    id: 10,
+                    word: "认",
+                    rate: 4,
+                    length: 2,
+                  },
+                  {
+                    id: 11,
+                    word: "控",
+                    rate: 2,
+                    length: 2,
+                  },
+                  {
+                    id: 12,
+                    word: "信",
+                    rate: 1,
+                    length: 2,
+                  },
+                  {
+                    id: 13,
+                    word: "家",
+                    rate: 4,
+                    length: 2,
+                  },
+                  {
+                    id: 14,
+                    word: "夜",
+                    rate: 3,
+                    length: 2,
+                  },
+                  {
+                    id: 15,
+                    word: "话",
+                    rate: 2,
+                    length: 2,
+                  },
+                  {
+                    id: 16,
+                    word: "血",
+                    rate: 1,
+                    length: 2,
+                  },
+                  {
+                    id: 17,
+                    word: "天",
+                    rate: 4,
+                    length: 2,
+                  },
+                  {
+                    id: 18,
+                    word: "强",
+                    rate: 3,
                     length: 2,
                   },
                 ]}
@@ -253,37 +324,15 @@ export default function HomePage() {
                 <div className="space-y-2">
                   {/* 按长度分组展示 */}
                   {[4, 3, 2, 5].map((length) => {
+                    // console.warn(rhymes.map((k) =>{
+                    //   return k.word;
+                    // }));
+                    // console.warn(rhymes);
                     const lengthRhymes = rhymes.filter(
                       (r) => r.length === length
                     );
                     if (lengthRhymes.length === 0) return null;
 
-                    const lengthInfo = {
-                      4: {
-                        title: "四字词汇",
-                        color: "red",
-                        // bg: "bg-red-50",
-                        icon: "🔥",
-                      },
-                      3: {
-                        title: "三字词汇",
-                        color: "orange",
-                        // bg: "bg-orange-50",
-                        icon: "⭐",
-                      },
-                      2: {
-                        title: "二字词汇",
-                        color: "blue",
-                        // bg: "bg-blue-50",
-                        icon: "💎",
-                      },
-                      5: {
-                        title: "长词汇",
-                        color: "purple",
-                        // bg: "bg-purple-50",
-                        icon: "🎯",
-                      },
-                    }[length]!;
                     return (
                       <div key={length} className={`p-1 rounded-xl`}>
                         {/* <Title level={5} className="!mb-3 !text-gray-700">

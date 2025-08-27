@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+AI_API_README.md
+rap_prod.sql
+/sql_word
+res*.json
+res.json
