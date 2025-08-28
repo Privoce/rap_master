@@ -1,11 +1,18 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
-import { Input, Card, Typography, Row, Col, List } from "antd";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+import { Input, Card, Typography, Row, Col, List, Tabs, InputRef } from "antd";
 import {
   SearchOutlined,
   ThunderboltOutlined,
   HeartOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 
 // import RadioGroup from "@/components/RadioGroup";
@@ -20,7 +27,9 @@ import { debounce } from "@/lib/utils";
 //   TONE_TYPE_OPTIONS,
 //   APP_CONFIG,
 // } from "@/lib/constants";
-import type { SearchParams } from "@/types";
+import type { Rhythm, SearchParams } from "@/types";
+import { STANDARD_WORDS } from "@/lib/constants";
+import { TabsProps } from "antd/lib";
 
 const { Title, Paragraph } = Typography;
 
@@ -31,28 +40,59 @@ export default function HomePage() {
     tone_type: 2,
   });
 
-  const [rhymes, setRhymes] = useState<any[]>([]);
+  const [rhymes, setRhymes] = useState<Rhythm[]>([]);
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<Map<string, Rhythm[]>>(new Map());
+  // 判断当前输入的是否为中文
+  const isKeyChinese = useRef(false);
+  const searchInputRef = useRef<InputRef>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current?.input.addEventListener("compositionstart", () => {
+        console.warn("当前输入为中文");
+        isKeyChinese.current = true;
+      });
+    }
+  }, [searchInputRef.current]);
 
   // 防抖搜索
   const debouncedSearch = useCallback(
     debounce(async (params: SearchParams) => {
-      if (!params.word.trim()) {
+      let hasEnWord = /[a-zA-Z]/.test(params.word);
+      if (hasEnWord) {
         setRhymes([]);
         return;
       }
-      
+      if (!params.word.trim() && !isKeyChinese.current) {
+        setRhymes([]);
+        return;
+      }
+
       setLoading(true);
       try {
-        const data = await apiClient.getRhymes(params);
+        let data = await apiClient.getRhymes(params);
+        let existedWords = new Set<string>();
+        data = data.filter((item) => {
+          let final2 = item.word.length >= 2 ? item.word.slice(-2) : item.word;
+          if (!existedWords.has(final2)) {
+            existedWords.add(final2);
+            return true;
+          }
+          return false;
+        });
+
         setRhymes(data);
+        setHistory((prev) => new Map(prev).set(params.word, data));
+        setActiveKey(params.word);
       } catch (error) {
         console.error("搜索失败:", error);
         setRhymes([]);
       } finally {
         setLoading(false);
       }
-    }, 300),
+    }, 500),
     [] // 移除依赖，避免每次 searchParams 变化都重新创建防抖函数
   );
 
@@ -97,6 +137,92 @@ export default function HomePage() {
     }
   }, [searchParams, debouncedSearch]);
 
+  const removeHistory = (key: string) => {
+    setHistory((prev) => {
+      const newHistory = new Map(prev);
+      newHistory.delete(key);
+      return newHistory;
+    });
+    setActiveKey(history.keys().next().value);
+  };
+
+  const searchItems: TabsProps["items"] = useMemo(() => {
+    let items = [];
+    // 限制history长度为3，如果超过3则删除最老的一个
+    if (history.size > 3) {
+      history.delete(history.keys().next().value);
+    }
+    history.forEach((value, key) => {
+      items.push({
+        key,
+        label: (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "0 8px",
+            }}
+            onClick={() => setActiveKey(key)}
+          >
+            <span>{key}</span>
+            <CloseCircleOutlined
+              onClick={() => removeHistory(key)}
+            ></CloseCircleOutlined>
+          </div>
+        ),
+        children: (
+          <div className="space-y-2">
+            {[4, 3, 2, 5].map((length) => {
+              // console.warn(rhymes.map((k) =>{
+              //   return k.word;
+              // }));
+              // console.warn(rhymes);
+              // let existedWords = new Set<string>();
+              // const lengthRhymes = rhymes.filter((r) => {
+              //   // 只看最后两个字
+              //   let final2 = r.word.length >= 2 ? r.word.slice(-2) : r.word;
+              //   if (r.length === length && !existedWords.has(final2)) {
+              //     existedWords.add(final2);
+              //     return true;
+              //   }
+              //   return false;
+              // });
+              const lengthRhymes = value.filter((r) => r.length === length);
+              if (lengthRhymes.length === 0) return null;
+
+              return (
+                <div key={length} className={`p-1 rounded-xl`}>
+                  <div className="flex flex-wrap gap-2">
+                    <List
+                      grid={{ gutter: 16, column: length === 2 ? 5 : 4 }}
+                      dataSource={lengthRhymes}
+                      renderItem={(rhythm) => (
+                        <List.Item>
+                          <RhymeTagEasy
+                            key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+                            word={rhythm.word}
+                            rate={rhythm.rate}
+                            length={rhythm.length}
+                            onClick={() => handleWordChange(rhythm.word)}
+                            className="transform hover:scale-110 transition-all duration-300"
+                          ></RhymeTagEasy>
+                        </List.Item>
+                      )}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ),
+      });
+    });
+
+    return items;
+  }, [history]);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -122,7 +248,11 @@ export default function HomePage() {
                 size="large"
                 prefix={<SearchOutlined />}
                 value={searchParams.word}
-                onChange={(e) => handleWordChange(e.target.value)}
+                onChange={(e) => {
+                  isKeyChinese.current = false;
+                  handleWordChange(e.target.value);
+                }}
+                ref={searchInputRef}
               ></Input>
             </div>
           </div>
@@ -179,218 +309,14 @@ export default function HomePage() {
 
         {/* 搜索结果区域 */}
         {searchParams.word && (
-          <div>
-            {/* <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 -m-6 mb-6">
-              <Title level={3} className="!mb-2 !text-gray-700">
-                <HeartOutlined className="mr-2 text-red-500" />
-                "{searchParams.word}" 的押韵结果
-              </Title>
-              {rhymes.length > 0 && (
-                <Paragraph className="!mb-0 !text-gray-500">
-                  找到 <span className="font-bold text-blue-600">{rhymes.length}</span> 个押韵词汇
-                </Paragraph>
-              )}
-            </div> */}
-
-            <div style={{ height: "100%", width: "100%" }}>
-              {!loading && rhymes.length === 0 && <Empty />}
-
-              <List
-                grid={{ gutter: 16, column: 6 }}
-                dataSource={[
-                  {
-                    id: 1,
-                    word: "差",
-                    rate: 5,
-                    length: 2,
-                  },
-                  {
-                    id: 2,
-                    word: "你",
-                    rate: 4,
-                    length: 2,
-                  },
-                  {
-                    id: 3,
-                    word: "不",
-                    rate: 3,
-                    length: 2,
-                  },
-                  {
-                    id: 4,
-                    word: "快",
-                    rate: 2,
-                    length: 2,
-                  },
-                  {
-                    id: 5,
-                    word: "谁",
-                    rate: 1,
-                    length: 2,
-                  },
-                  {
-                    id: 6,
-                    word: "错",
-                    rate: 4,
-                    length: 2,
-                  },
-                  {
-                    id: 7,
-                    word: "闹",
-                    rate: 3,
-                    length: 2,
-                  },
-                  {
-                    id: 8,
-                    word: "乱",
-                    rate: 2,
-                    length: 2,
-                  },
-                  {
-                    id: 9,
-                    word: "句",
-                    rate: 1,
-                    length: 2,
-                  },
-                  {
-                    id: 10,
-                    word: "认",
-                    rate: 4,
-                    length: 2,
-                  },
-                  {
-                    id: 11,
-                    word: "控",
-                    rate: 2,
-                    length: 2,
-                  },
-                  {
-                    id: 12,
-                    word: "信",
-                    rate: 1,
-                    length: 2,
-                  },
-                  {
-                    id: 13,
-                    word: "家",
-                    rate: 4,
-                    length: 2,
-                  },
-                  {
-                    id: 14,
-                    word: "夜",
-                    rate: 3,
-                    length: 2,
-                  },
-                  {
-                    id: 15,
-                    word: "话",
-                    rate: 2,
-                    length: 2,
-                  },
-                  {
-                    id: 16,
-                    word: "血",
-                    rate: 1,
-                    length: 2,
-                  },
-                  {
-                    id: 17,
-                    word: "天",
-                    rate: 4,
-                    length: 2,
-                  },
-                  {
-                    id: 18,
-                    word: "强",
-                    rate: 3,
-                    length: 2,
-                  },
-                ]}
-                renderItem={(rhythm) => (
-                  <List.Item>
-                    <RhymeTagEasy
-                      key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
-                      word={rhythm.word}
-                      rate={rhythm.rate}
-                      length={rhythm.length}
-                      onClick={() => handleWordChange(rhythm.word)}
-                      className="transform hover:scale-110 transition-all duration-300"
-                    ></RhymeTagEasy>
-                  </List.Item>
-                )}
-              />
-              {!loading && rhymes.length > 0 && (
-                <div className="space-y-2">
-                  {/* 按长度分组展示 */}
-                  {[4, 3, 2, 5].map((length) => {
-                    // console.warn(rhymes.map((k) =>{
-                    //   return k.word;
-                    // }));
-                    // console.warn(rhymes);
-                    const lengthRhymes = rhymes.filter(
-                      (r) => r.length === length
-                    );
-                    if (lengthRhymes.length === 0) return null;
-
-                    return (
-                      <div key={length} className={`p-1 rounded-xl`}>
-                        {/* <Title level={5} className="!mb-3 !text-gray-700">
-                          {lengthInfo.icon} {lengthInfo.title} ({lengthRhymes.length}个)
-                        </Title> */}
-                        <div className="flex flex-wrap gap-2">
-                          <List
-                            grid={{ gutter: 16, column: length === 2 ? 5 : 4 }}
-                            dataSource={lengthRhymes}
-                            renderItem={(rhythm) => (
-                              <List.Item>
-                                <RhymeTagEasy
-                                  key={
-                                    rhythm.id || `${rhythm.word}-${rhythm.rate}`
-                                  }
-                                  word={rhythm.word}
-                                  rate={rhythm.rate}
-                                  length={rhythm.length}
-                                  onClick={() => handleWordChange(rhythm.word)}
-                                  className="transform hover:scale-110 transition-all duration-300"
-                                ></RhymeTagEasy>
-                              </List.Item>
-                            )}
-                          />
-                          {/* 
-                          {lengthRhymes.map((rhythm: any) => (
-                            // <RhymeTag
-                            //   key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
-                            //   word={rhythm.word}
-                            //   rate={rhythm.rate}
-                            //   length={rhythm.length}
-                              </List.Item>
-                            )}
-                          />
-
-                          {lengthRhymes.map((rhythm: any) => (
-                            // <RhymeTag
-                            //   key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
-                            //   word={rhythm.word}
-                            //   rate={rhythm.rate}
-                            //   length={rhythm.length}
-                            //   onClick={() => handleWordChange(rhythm.word)}
-                            //   className="transform hover:scale-110 transition-all duration-300"
-                            // />
-                           
-                          ))} */}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+          <div style={{ height: "100%", width: "100%" }}>
+            {!loading && rhymes.length === 0 && <Empty />}
           </div>
         )}
-
+        <StandardWords handleWordChange={handleWordChange}></StandardWords>
+        <Tabs activeKey={activeKey} items={searchItems}></Tabs>
         {/* 说明区域 */}
-        {!searchParams.word && (
+        {!searchParams.word && history.size === 0 && (
           <Card className="!shadow-xl !border-0 !rounded-2xl !bg-gradient-to-r !from-purple-50 !to-pink-50">
             <div className="text-center py-8">
               <Title level={3} className="!mb-4 !text-gray-700">
@@ -445,5 +371,30 @@ export default function HomePage() {
       {/* Loading Overlay */}
       {/* <Loading show={loading} tip="正在搜索押韵词汇..." /> */}
     </div>
+  );
+}
+
+function StandardWords({
+  handleWordChange,
+}: {
+  handleWordChange: (value: string) => void;
+}) {
+  return (
+    <List
+      grid={{ gutter: 16, column: 6 }}
+      dataSource={STANDARD_WORDS}
+      renderItem={(rhythm) => (
+        <List.Item>
+          <RhymeTagEasy
+            key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+            word={rhythm.word}
+            rate={rhythm.rate}
+            length={rhythm.length}
+            onClick={() => handleWordChange(rhythm.word)}
+            className="transform hover:scale-110 transition-all duration-300"
+          ></RhymeTagEasy>
+        </List.Item>
+      )}
+    />
   );
 }

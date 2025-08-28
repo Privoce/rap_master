@@ -47,3 +47,114 @@ export const API_CONFIG = {
   retryTimes: 3,
   retryDelay: 1000,
 } as const;
+
+export const STANDARD_WORDS = [
+  {
+    id: 1,
+    word: "差",
+    rate: 5,
+    length: 2,
+  },
+  {
+    id: 2,
+    word: "你",
+    rate: 4,
+    length: 2,
+  },
+  {
+    id: 3,
+    word: "不",
+    rate: 3,
+    length: 2,
+  },
+  {
+    id: 4,
+    word: "快",
+    rate: 2,
+    length: 2,
+  },
+  {
+    id: 5,
+    word: "谁",
+    rate: 1,
+    length: 2,
+  },
+  {
+    id: 6,
+    word: "错",
+    rate: 4,
+    length: 2,
+  },
+  {
+    id: 7,
+    word: "闹",
+    rate: 3,
+    length: 2,
+  },
+  {
+    id: 8,
+    word: "乱",
+    rate: 2,
+    length: 2,
+  },
+  {
+    id: 9,
+    word: "句",
+    rate: 1,
+    length: 2,
+  },
+  {
+    id: 10,
+    word: "认",
+    rate: 4,
+    length: 2,
+  },
+  {
+    id: 11,
+    word: "控",
+    rate: 2,
+    length: 2,
+  },
+  {
+    id: 12,
+    word: "信",
+    rate: 1,
+    length: 2,
+  },
+  {
+    id: 13,
+    word: "家",
+    rate: 4,
+    length: 2,
+  },
+  {
+    id: 14,
+    word: "夜",
+    rate: 3,
+    length: 2,
+  },
+  {
+    id: 15,
+    word: "话",
+    rate: 2,
+    length: 2,
+  },
+  {
+    id: 16,
+    word: "血",
+    rate: 1,
+    length: 2,
+  },
+  {
+    id: 17,
+    word: "天",
+    rate: 4,
+    length: 2,
+  },
+  {
+    id: 18,
+    word: "强",
+    rate: 3,
+    length: 2,
+  },
+];
