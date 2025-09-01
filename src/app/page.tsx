@@ -41,6 +41,10 @@ export default function HomePage() {
   });
 
   const [rhymes, setRhymes] = useState<Rhythm[]>([]);
+  const [singleRhymes, setSingleRhymes] = useState<Rhythm[]>([]);
+  const [singleRhymesHistory, setSingleRhymesHistory] = useState<
+    Map<string, Rhythm[]>
+  >(new Map());
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<Map<string, Rhythm[]>>(new Map());
   // 判断当前输入的是否为中文
@@ -51,7 +55,6 @@ export default function HomePage() {
   useEffect(() => {
     if (searchInputRef.current) {
       searchInputRef.current?.input.addEventListener("compositionstart", () => {
-        console.warn("当前输入为中文");
         isKeyChinese.current = true;
       });
     }
@@ -72,7 +75,7 @@ export default function HomePage() {
 
       setLoading(true);
       try {
-        let data = await apiClient.getRhymes(params);
+        let { single, sortedResults: data } = await apiClient.getRhymes(params);
         let existedWords = new Set<string>();
         data = data.filter((item) => {
           let final2 = item.word.length >= 2 ? item.word.slice(-2) : item.word;
@@ -84,7 +87,11 @@ export default function HomePage() {
         });
 
         setRhymes(data);
+        setSingleRhymes(single);
         setHistory((prev) => new Map(prev).set(params.word, data));
+        setSingleRhymesHistory((prev) =>
+          new Map(prev).set(params.word, single)
+        );
         setActiveKey(params.word);
       } catch (error) {
         console.error("搜索失败:", error);
@@ -141,15 +148,20 @@ export default function HomePage() {
     setHistory((prev) => {
       const newHistory = new Map(prev);
       newHistory.delete(key);
+      setActiveKey(newHistory.keys().next().value);
       return newHistory;
     });
-    setActiveKey(history.keys().next().value);
+    setSingleRhymesHistory((prev) => {
+      const newHistory = new Map(prev);
+      newHistory.delete(key);
+      return newHistory;
+    });
   };
 
   const searchItems: TabsProps["items"] = useMemo(() => {
     let items = [];
-    // 限制history长度为3，如果超过3则删除最老的一个
-    if (history.size > 3) {
+    // 限制history长度为5，如果超过3则删除最老的一个
+    if (history.size > 5) {
       history.delete(history.keys().next().value);
     }
     history.forEach((value, key) => {
@@ -160,9 +172,10 @@ export default function HomePage() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              padding: "0 8px",
+              justifyContent: "space-between",
+              gap: "4px",
+              padding: "0 0px",
+              width: "74px",
             }}
             onClick={() => setActiveKey(key)}
           >
@@ -175,21 +188,9 @@ export default function HomePage() {
         children: (
           <div className="space-y-2">
             {[4, 3, 2, 5].map((length) => {
-              // console.warn(rhymes.map((k) =>{
-              //   return k.word;
-              // }));
-              // console.warn(rhymes);
-              // let existedWords = new Set<string>();
-              // const lengthRhymes = rhymes.filter((r) => {
-              //   // 只看最后两个字
-              //   let final2 = r.word.length >= 2 ? r.word.slice(-2) : r.word;
-              //   if (r.length === length && !existedWords.has(final2)) {
-              //     existedWords.add(final2);
-              //     return true;
-              //   }
-              //   return false;
-              // });
-              const lengthRhymes = value.filter((r) => r.length === length);
+              const lengthRhymes = value.filter(
+                (r) => r.length === length && r.length > 1
+              );
               if (lengthRhymes.length === 0) return null;
 
               return (
@@ -265,7 +266,7 @@ export default function HomePage() {
       </div>
 
       {/* 主要内容区 */}
-      <div className=" mx-auto px-4 py-4" style={{ maxWidth: "444px" }}>
+      <div className="mx-auto px-2 py-4" style={{ maxWidth: "444px" }}>
         {/* 控制面板 */}
         {/* <Card className="!mb-8 !shadow-xl !border-0 !rounded-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 -m-6 mb-6">
@@ -313,8 +314,20 @@ export default function HomePage() {
             {!loading && rhymes.length === 0 && <Empty />}
           </div>
         )}
-        <StandardWords handleWordChange={handleWordChange}></StandardWords>
-        <Tabs activeKey={activeKey} items={searchItems}></Tabs>
+        {(singleRhymesHistory.get(activeKey || "") || []).length === 0 ? (
+          <StandardWords handleWordChange={handleWordChange}></StandardWords>
+        ) : (
+          <StandardWordsAfterSearch
+            rhythms={singleRhymesHistory.get(activeKey || "") || []}
+            handleWordChange={handleWordChange}
+          ></StandardWordsAfterSearch>
+        )}
+        <Tabs
+          activeKey={activeKey}
+          items={searchItems}
+          size="small"
+          tabBarGutter={10}
+        ></Tabs>
         {/* 说明区域 */}
         {!searchParams.word && history.size === 0 && (
           <Card className="!shadow-xl !border-0 !rounded-2xl !bg-gradient-to-r !from-purple-50 !to-pink-50">
@@ -383,6 +396,51 @@ function StandardWords({
     <List
       grid={{ gutter: 16, column: 6 }}
       dataSource={STANDARD_WORDS}
+      renderItem={(rhythm) => (
+        <List.Item>
+          <RhymeTagEasy
+            key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+            word={rhythm.word}
+            rate={rhythm.rate}
+            length={rhythm.length}
+            onClick={() => handleWordChange(rhythm.word)}
+            className="transform hover:scale-110 transition-all duration-300"
+          ></RhymeTagEasy>
+        </List.Item>
+      )}
+    />
+  );
+}
+
+function StandardWordsAfterSearch({
+  handleWordChange,
+  rhythms,
+}: {
+  rhythms: Rhythm[];
+  handleWordChange: (value: string) => void;
+}) {
+  const [handledRhythms, setHandledRhythms] = useState<Rhythm[]>([]);
+  useEffect(() => {
+    const existedWords = new Set<string>();
+    const res = rhythms
+      .filter((r) => {
+        if (existedWords.has(r.word.charAt(r.word.length - 1))) return false;
+        existedWords.add(r.word.charAt(r.word.length - 1));
+        return true;
+      })
+      .map((r) => {
+        r.word = r.word.charAt(r.word.length - 1);
+        return r;
+      })
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, 18);
+    setHandledRhythms(res);
+  }, [rhythms]);
+
+  return (
+    <List
+      grid={{ gutter: 16, column: 6 }}
+      dataSource={handledRhythms}
       renderItem={(rhythm) => (
         <List.Item>
           <RhymeTagEasy

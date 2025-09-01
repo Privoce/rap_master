@@ -1,9 +1,10 @@
-import { Op } from 'sequelize';
-import { getWordModel, connectDatabase } from '@/lib/database';
-import { paramsInvalid, safeParseInt } from '@/utils/common';
-import { paramErr, success, systemErr } from '@/lib/response';
-import { getWordInfo } from '@/lib/pinyin';
-import type { ApiResponse, Rhythm } from '@/types';
+import { Op } from "sequelize";
+import { getWordModel, connectDatabase } from "@/lib/database";
+import { paramsInvalid, safeParseInt } from "@/utils/common";
+import { paramErr, success, systemErr } from "@/lib/response";
+import { getWordInfo } from "@/lib/pinyin";
+import type { ApiResponse, Rhythm } from "@/types";
+import { Single_Day } from "next/font/google";
 
 interface QueryWordsParams {
   word: string;
@@ -11,6 +12,11 @@ interface QueryWordsParams {
   type_without_tone: string;
   length: number;
   num: number;
+}
+
+export interface WordServiceReturn {
+  single: Rhythm[];
+  real: Rhythm[][];
 }
 
 class WordService {
@@ -21,40 +27,58 @@ class WordService {
   /**
    * 获取押韵词汇摘要（分长度返回）
    */
-  async getSummary({ 
-    word, 
-    rap_num, 
-    tone_type 
-  }: { 
-    word: string; 
-    rap_num: string | number; 
-    tone_type: string | number; 
-  }): Promise<ApiResponse<Rhythm[][]>> {
+  async getSummary({
+    word,
+    rap_num,
+    tone_type,
+  }: {
+    word: string;
+    rap_num: string | number;
+    tone_type: string | number;
+  }): Promise<ApiResponse<WordServiceReturn>> {
     // 参数校验
     if (paramsInvalid([word, rap_num, tone_type])) {
-      return paramErr() as ApiResponse<Rhythm[][]>;
+      return paramErr() as ApiResponse<WordServiceReturn>;
     }
     // 为空直接返回
-    if (word === '') {
-      return success([]);
+    if (word === "") {
+      return success({
+        single: [],
+        real: [],
+      });
     }
-    
+
     await this.ensureConnection();
     const rapNum = safeParseInt(rap_num);
+    const rapNum1 = 1;
     const toneType = safeParseInt(tone_type);
+    const toneType1 = 1;
     const result = getWordInfo(word); // 获取处理后的单词拼音
     // 获取最终要押韵的无音调韵母
     const typeWithoutTone = result.type_without_tone
-      .split('-')
+      .split("-")
       .slice(-rapNum)
-      .join('-');
+      .join("-");
+    const typeWithoutTone1 = result.type_without_tone
+      .split("-")
+      .slice(-rapNum1)
+      .join("-");
     // 获取最终要押韵的有音调韵母
-    const typeWithToneArr = result.type_with_tone.split('-');
+    const typeWithToneArr = result.type_with_tone.split("-");
     const num = toneType > 1 ? rapNum : toneType;
-    const typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
+    const num1 = toneType1 > 1 ? rapNum1 : toneType1;
+    const typeWithTone = num === 0 ? "" : typeWithToneArr.slice(-num).join("-");
+    const typeWithTone1 = typeWithToneArr.slice(-num1).join("-");
     try {
       // 并发查询不同长度的词
-      const [words2, words3, words4, words5] = await Promise.all([
+      const [words1, words2, words3, words4, words5] = await Promise.all([
+        this.getWordsFromModel({
+          word: word.charAt(word.length - 1),
+          type_with_tone: typeWithTone1,
+          type_without_tone: typeWithoutTone1,
+          length: word.length === 1 ? 2 : word.length,
+          num: 140,
+        }),
         this.getWordsFromModel({
           word,
           type_with_tone: typeWithTone,
@@ -84,54 +108,56 @@ class WordService {
           num: 40,
         }),
       ]);
-      
-      return success([words2, words3, words4, words5]);
+      return success({
+        single: words1,
+        real: [words2, words3, words4, words5],
+      });
     } catch (err) {
-      return systemErr(err) as ApiResponse<Rhythm[][]>;
+      return systemErr(err) as ApiResponse<WordServiceReturn>;
     }
   }
 
   /**
    * 获取指定长度的押韵词汇
    */
-  async getWords({ 
-    word, 
-    rap_num, 
-    tone_type, 
-    length 
-  }: { 
-    word: string; 
-    rap_num: string | number; 
-    tone_type: string | number; 
-    length: string | number; 
+  async getWords({
+    word,
+    rap_num,
+    tone_type,
+    length,
+  }: {
+    word: string;
+    rap_num: string | number;
+    tone_type: string | number;
+    length: string | number;
   }): Promise<ApiResponse<Rhythm[]>> {
     // 参数校验
     if (paramsInvalid([word, rap_num, tone_type, length])) {
       return paramErr() as ApiResponse<Rhythm[]>;
     }
-    
+
     // 为空直接返回
-    if (word === '') {
+    if (word === "") {
       return success([]);
     }
-    
+
     await this.ensureConnection();
-    
+
     const rapNum = safeParseInt(rap_num);
     const toneType = safeParseInt(tone_type);
     const wordLength = safeParseInt(length, 2);
     const result = getWordInfo(word); // 获取处理后的单词拼音
-    
+
     // 获取最终要押韵的无音调韵母
     const typeWithoutTone = result.type_without_tone
-      .split('-')
+      .split("-")
       .slice(-rapNum)
-      .join('-');
+      .join("-");
     // 获取最终要押韵的有音调韵母
-    const typeWithToneArr = result.type_with_tone.split('-');
+    const typeWithToneArr = result.type_with_tone.split("-");
     const num = toneType > 1 ? rapNum : toneType;
-    const typeWithTone = num === 0 ? '' : typeWithToneArr.slice(-num).join('-');
-    
+    const typeWithTone = num === 0 ? "" : typeWithToneArr.slice(-num).join("-");
+
     try {
       const data = await this.getWordsFromModel({
         word,
@@ -140,7 +166,7 @@ class WordService {
         length: wordLength,
         num: 100,
       });
-      
+
       return success(data);
     } catch (err) {
       return systemErr(err) as ApiResponse<Rhythm[]>;
@@ -167,7 +193,7 @@ class WordService {
     num,
   }: QueryWordsParams): Promise<Rhythm[]> {
     const WordModel = getWordModel();
-    
+
     const results = await WordModel.findAll({
       where: {
         word: { [Op.ne]: word },
@@ -180,10 +206,10 @@ class WordService {
       },
       offset: 0,
       limit: num || 50,
-      order: [['rate', 'DESC']],
+      order: [["rate", "DESC"]],
     });
 
-    return results.map(item => item.toJSON() as Rhythm);
+    return results.map((item) => item.toJSON() as Rhythm);
   }
 }
 

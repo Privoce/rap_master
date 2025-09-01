@@ -162,6 +162,7 @@ export function getWordInfo(word = "", rate = 0): WordInfo {
       toneArr[index] = "1";
     }
   });
+
   let index = 0;
   finalWithoutToneArr.forEach((item) => {
     let singleWordList = word.split("");
