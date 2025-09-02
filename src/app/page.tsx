@@ -62,7 +62,7 @@ export default function HomePage() {
 
   // 防抖搜索
   const debouncedSearch = useCallback(
-    debounce(async (params: SearchParams) => {
+    debounce(async (params: SearchParams, isSearchSingle: boolean) => {
       let hasEnWord = /[a-zA-Z]/.test(params.word);
       if (hasEnWord) {
         setRhymes([]);
@@ -75,7 +75,10 @@ export default function HomePage() {
 
       setLoading(true);
       try {
-        let { single, sortedResults: data } = await apiClient.getRhymes(params);
+        let { single, sortedResults: data } = await apiClient.getRhymes(
+          params,
+          isSearchSingle
+        );
         let existedWords = new Set<string>();
         data = data.filter((item) => {
           let final2 = item.word.length >= 2 ? item.word.slice(-2) : item.word;
@@ -87,11 +90,14 @@ export default function HomePage() {
         });
 
         setRhymes(data);
-        setSingleRhymes(single);
+
         setHistory((prev) => new Map(prev).set(params.word, data));
-        setSingleRhymesHistory((prev) =>
-          new Map(prev).set(params.word, single)
-        );
+        if (isSearchSingle) {
+          setSingleRhymes(single);
+          setSingleRhymesHistory((prev) =>
+            new Map(prev).set(params.word, single)
+          );
+        }
         setActiveKey(params.word);
       } catch (error) {
         console.error("搜索失败:", error);
@@ -113,13 +119,14 @@ export default function HomePage() {
   // }, [searchParams, debouncedSearch]);
 
   // 处理输入变化
+  // isSearchSingle: 区分是否是搜索框输入的单个文字还，点击Header中的单个文字还是其他
+  // 如果是搜索框和点击Header的就需要搜，其他不需要为false
   const handleWordChange = useCallback(
-    (value: string) => {
+    (value: string, isSearchSingle: boolean) => {
       const newParams = { ...searchParams, word: value };
       setSearchParams(newParams);
-
       if (value.trim()) {
-        debouncedSearch(newParams);
+        debouncedSearch(newParams, isSearchSingle);
       }
     },
     [searchParams, debouncedSearch]
@@ -140,9 +147,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (searchParams.word) {
-      debouncedSearch(searchParams);
+      debouncedSearch(searchParams, true);
     }
-  }, [searchParams, debouncedSearch]);
+  }, []);
 
   const removeHistory = (key: string) => {
     setHistory((prev) => {
@@ -206,7 +213,7 @@ export default function HomePage() {
                             word={rhythm.word}
                             rate={rhythm.rate}
                             length={rhythm.length}
-                            onClick={() => handleWordChange(rhythm.word)}
+                            onClick={() => handleWordChange(rhythm.word, false)}
                             className="transform hover:scale-110 transition-all duration-300"
                           ></RhymeTagEasy>
                         </List.Item>
@@ -251,7 +258,7 @@ export default function HomePage() {
                 value={searchParams.word}
                 onChange={(e) => {
                   isKeyChinese.current = false;
-                  handleWordChange(e.target.value);
+                  handleWordChange(e.target.value, true);
                 }}
                 ref={searchInputRef}
               ></Input>
@@ -390,7 +397,7 @@ export default function HomePage() {
 function StandardWords({
   handleWordChange,
 }: {
-  handleWordChange: (value: string) => void;
+  handleWordChange: (value: string, isSearchSingle: boolean) => void;
 }) {
   return (
     <List
@@ -403,7 +410,7 @@ function StandardWords({
             word={rhythm.word}
             rate={rhythm.rate}
             length={rhythm.length}
-            onClick={() => handleWordChange(rhythm.word)}
+            onClick={() => handleWordChange(rhythm.word, true)}
             className="transform hover:scale-110 transition-all duration-300"
           ></RhymeTagEasy>
         </List.Item>
@@ -417,7 +424,7 @@ function StandardWordsAfterSearch({
   rhythms,
 }: {
   rhythms: Rhythm[];
-  handleWordChange: (value: string) => void;
+  handleWordChange: (value: string, isSearchSingle: boolean) => void;
 }) {
   const [handledRhythms, setHandledRhythms] = useState<Rhythm[]>([]);
   useEffect(() => {
@@ -448,7 +455,7 @@ function StandardWordsAfterSearch({
             word={rhythm.word}
             rate={rhythm.rate}
             length={rhythm.length}
-            onClick={() => handleWordChange(rhythm.word)}
+            onClick={() => handleWordChange(rhythm.word, true)}
             className="transform hover:scale-110 transition-all duration-300"
           ></RhymeTagEasy>
         </List.Item>

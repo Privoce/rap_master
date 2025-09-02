@@ -31,10 +31,12 @@ class WordService {
     word,
     rap_num,
     tone_type,
+    isSearchSingle,
   }: {
     word: string;
     rap_num: string | number;
     tone_type: string | number;
+    isSearchSingle: boolean;
   }): Promise<ApiResponse<WordServiceReturn>> {
     // 参数校验
     if (paramsInvalid([word, rap_num, tone_type])) {
@@ -72,13 +74,15 @@ class WordService {
     try {
       // 并发查询不同长度的词
       const [words1, words2, words3, words4, words5] = await Promise.all([
-        this.getWordsFromModel({
-          word: word.charAt(word.length - 1),
-          type_with_tone: typeWithTone1,
-          type_without_tone: typeWithoutTone1,
-          length: word.length === 1 ? 2 : word.length,
-          num: 140,
-        }),
+        isSearchSingle
+          ? this.getWordsFromModel({
+              word: word.charAt(word.length - 1),
+              type_with_tone: typeWithTone1,
+              type_without_tone: typeWithoutTone1,
+              length: word.length === 1 ? 2 : word.length,
+              num: 140,
+            })
+          : [],
         this.getWordsFromModel({
           word,
           type_with_tone: typeWithTone,

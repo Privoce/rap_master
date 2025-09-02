@@ -53,15 +53,22 @@ class ApiClient {
   /**
    * 获取押韵词汇 - 自动获取所有长度并按优先级排序
    */
-  async getRhymes(params: SearchParams): Promise<{
+  async getRhymes(
+    params: SearchParams,
+    isSearchSingle: boolean
+  ): Promise<{
     single: Rhythm[];
     sortedResults: Rhythm[];
   }> {
     try {
+      console.warn(isSearchSingle);
       const response = await this.client.get<ApiResponse<WordServiceReturn>>(
         "/words",
         {
-          params,
+          params: {
+            ...params,
+            isSearchSingle,
+          },
         }
       );
 
