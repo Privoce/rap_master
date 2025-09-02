@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const tone_type = searchParams.get('tone_type') || '0';
 
     const result = await wordService.getSummary({
+      isSearchSingle: true,
       word,
       rap_num,
       tone_type,
