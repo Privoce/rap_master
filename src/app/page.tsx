@@ -42,6 +42,8 @@ export default function HomePage() {
 
   const [rhymes, setRhymes] = useState<Rhythm[]>([]);
   const [singleRhymes, setSingleRhymes] = useState<Rhythm[]>([]);
+  const [handleedSingleRhymes, setHandledSingleRhymes] = useState<Rhythm[]>([]);
+  const [searchSingle, setSearchSingle] = useState(false);
   const [singleRhymesHistory, setSingleRhymesHistory] = useState<
     Map<string, Rhythm[]>
   >(new Map());
@@ -97,6 +99,12 @@ export default function HomePage() {
           setSingleRhymesHistory((prev) =>
             new Map(prev).set(params.word, single)
           );
+          setHandledSingleRhymes([]);
+        } else {
+          setSingleRhymes(handleedSingleRhymes);
+          setSingleRhymesHistory((prev) =>
+            new Map(prev).set(params.word, handleedSingleRhymes)
+          );
         }
         setActiveKey(params.word);
       } catch (error) {
@@ -106,7 +114,7 @@ export default function HomePage() {
         setLoading(false);
       }
     }, 500),
-    [] // 移除依赖，避免每次 searchParams 变化都重新创建防抖函数
+    [handleedSingleRhymes] // 移除依赖，避免每次 searchParams 变化都重新创建防抖函数
   );
 
   // // 处理搜索
@@ -202,24 +210,22 @@ export default function HomePage() {
 
               return (
                 <div key={length} className={`p-1 rounded-xl`}>
-                  <div className="flex flex-wrap gap-2">
-                    <List
-                      grid={{ gutter: 16, column: length === 2 ? 5 : 4 }}
-                      dataSource={lengthRhymes}
-                      renderItem={(rhythm) => (
-                        <List.Item>
-                          <RhymeTagEasy
-                            key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
-                            word={rhythm.word}
-                            rate={rhythm.rate}
-                            length={rhythm.length}
-                            onClick={() => handleWordChange(rhythm.word, false)}
-                            className="transform hover:scale-110 transition-all duration-300"
-                          ></RhymeTagEasy>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
+                  <List
+                    grid={{ gutter: 16, column: length === 2 ? 5 : 4 }}
+                    dataSource={lengthRhymes}
+                    renderItem={(rhythm) => (
+                      <List.Item>
+                        <RhymeTagEasy
+                          key={rhythm.id || `${rhythm.word}-${rhythm.rate}`}
+                          word={rhythm.word}
+                          rate={rhythm.rate}
+                          length={rhythm.length}
+                          onClick={() => handleWordChange(rhythm.word, false)}
+                          className="transform hover:scale-110 transition-all duration-300"
+                        ></RhymeTagEasy>
+                      </List.Item>
+                    )}
+                  />
                 </div>
               );
             })}
@@ -238,17 +244,6 @@ export default function HomePage() {
         <div className="absolute"></div>
         <div className="relative max-w-7xl mx-auto px-1 py-2 sm:px-6 lg:px-8">
           <div className="text-center">
-            {/* <Title 
-              level={1} 
-              className="!text-white !text-5xl !font-bold !mb-4 animate-fade-in"
-              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
-            >
-              🎤 {APP_CONFIG.name}
-            </Title>
-            <Paragraph className="!text-blue-100 !text-xl !mb-8 !max-w-2xl mx-auto">
-              {APP_CONFIG.description}
-            </Paragraph> */}
-
             {/* 搜索框 */}
             <div className="max-w-2xl mx-auto">
               <Input
@@ -265,11 +260,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* 装饰性背景 */}
-        {/* <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-pink-300 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-green-300 rounded-full opacity-20 animate-ping"></div> */}
       </div>
 
       {/* 主要内容区 */}
@@ -327,6 +317,7 @@ export default function HomePage() {
           <StandardWordsAfterSearch
             rhythms={singleRhymesHistory.get(activeKey || "") || []}
             handleWordChange={handleWordChange}
+            setHandled={(handled) => setHandledSingleRhymes(handled)}
           ></StandardWordsAfterSearch>
         )}
         <Tabs
@@ -422,9 +413,11 @@ function StandardWords({
 function StandardWordsAfterSearch({
   handleWordChange,
   rhythms,
+  setHandled,
 }: {
   rhythms: Rhythm[];
   handleWordChange: (value: string, isSearchSingle: boolean) => void;
+  setHandled: (handled: Rhythm[]) => void;
 }) {
   const [handledRhythms, setHandledRhythms] = useState<Rhythm[]>([]);
   useEffect(() => {
@@ -441,6 +434,7 @@ function StandardWordsAfterSearch({
       })
       .sort((a, b) => b.rate - a.rate)
       .slice(0, 18);
+    setHandled(res);
     setHandledRhythms(res);
   }, [rhythms]);
 

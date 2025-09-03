@@ -61,7 +61,6 @@ class ApiClient {
     sortedResults: Rhythm[];
   }> {
     try {
-      console.warn(isSearchSingle);
       const response = await this.client.get<ApiResponse<WordServiceReturn>>(
         "/words",
         {
