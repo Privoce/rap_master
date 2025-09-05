@@ -163,7 +163,9 @@ export default function HomePage() {
     setHistory((prev) => {
       const newHistory = new Map(prev);
       newHistory.delete(key);
-      setActiveKey(newHistory.keys().next().value);
+      let keys = newHistory.keys().toArray();
+      let endKey = keys.length - 1 >= 1 ? keys[keys.length - 1] : null;
+      setActiveKey(endKey);
       return newHistory;
     });
     setSingleRhymesHistory((prev) => {
@@ -194,7 +196,9 @@ export default function HomePage() {
             }}
             onClick={() => setActiveKey(key)}
           >
-            <span>{key}</span>
+            <span>
+              {key.length > 4 ? "..." + key.slice(-4, key.length) : key}
+            </span>
             <CloseCircleOutlined
               onClick={() => removeHistory(key)}
             ></CloseCircleOutlined>
