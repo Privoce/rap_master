@@ -159,13 +159,23 @@ export default function HomePage() {
     }
   }, []);
 
-  const removeHistory = (key: string) => {
+  const removeHistory = (key: string, event?: React.MouseEvent) => {
+    // 阻止事件冒泡，避免触发外层的 setActiveKey
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // 先计算新的 activeKey
+    const newHistory = new Map(history);
+    newHistory.delete(key);
+    const keys = Array.from(newHistory.keys());
+    const endKey = keys.length >= 1 ? keys[keys.length - 1] : null;
+    
+    // 更新状态
     setHistory((prev) => {
       const newHistory = new Map(prev);
       newHistory.delete(key);
-      let keys = newHistory.keys().toArray();
-      let endKey = keys.length - 1 >= 1 ? keys[keys.length - 1] : null;
-      setActiveKey(endKey);
       return newHistory;
     });
     setSingleRhymesHistory((prev) => {
@@ -173,6 +183,9 @@ export default function HomePage() {
       newHistory.delete(key);
       return newHistory;
     });
+    
+    // 单独设置 activeKey
+    setActiveKey(endKey);
   };
 
   const searchItems: TabsProps["items"] = useMemo(() => {
@@ -200,7 +213,7 @@ export default function HomePage() {
               {key.length > 4 ? "..." + key.slice(-4, key.length) : key}
             </span>
             <CloseCircleOutlined
-              onClick={() => removeHistory(key)}
+              onClick={(e) => removeHistory(key, e)}
             ></CloseCircleOutlined>
           </div>
         ),
